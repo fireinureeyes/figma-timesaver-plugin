@@ -1,44 +1,33 @@
 ## Figma Timesaver Plugin
 
+https://www.figma.com/community/plugin/1422956196270075203/timesaver-conditionally-select-rename-export-delete-duplicate
+
 <p float="left">
 <img src="https://github.com/fireinureeyes/figma-timesaver/blob/main/logo.png?raw=true">
  <img src="https://github.com/fireinureeyes/figma-timesaver/blob/main/screenshot.png?raw=true">
 </p>
 
-Stop doing things one by one and save time instead
+### Stop doing things one by one and save time instead
 Define your custom conditions and quickly filter out any subset of elements across your file.
-
 Then choose one of the actions to bulk process them.
 
-
-
-Example use cases
+### Example use cases
 SELECT all groups not using auto layout
-
 RENAME all frames on the bottom half of the screen (regex allowed)
-
 EXPORT all icons of a specific layer name format
-
 DELETE all masks or locked elements
-
 DUPLICATE and collect all components on one page
-
 The possibilities are endless...
 
-
-
-Freely combine more than 80 properties to get what you need
+### Freely combine more than 80 properties to get what you need
 Use logical AND and OR to build up complex conditions from:
 
-Scope:
-
+**Scope:**
 Current page
 Whole document
 Existing selection
 
-
-Object type:
-
+**Object type:**
 Components
 Instances
 Texts
@@ -49,9 +38,7 @@ Groups
 Frames
 Boolean operations (unions, substracts, intersects, excludes)
 
-
-General:
-
+**General:**
 Layer name
 Width
 Height
@@ -67,9 +54,7 @@ Mask state
 Export setting
 Overriden properties
 
-
-Appearance:
-
+**Appearance:**
 Rounding
 Fill
 Stroke
@@ -85,9 +70,7 @@ Stroke visiblity
 Stroke type
 Stroke alignment
 
-
-Effects:
-
+**Effects:**
 Drop shadow active
 Drop shadow x-offset
 Drop shadow y-offset
@@ -106,8 +89,7 @@ Layer blur active
 Background blur active
 
 
-Text:
-
+**Text:**
 Font name
 Font size
 Line height
@@ -120,9 +102,7 @@ Text decoration strikethrough
 Paragraph indentation
 Paragraph spacing
 
-
-Auto layout:
-
+**Auto layout:**
 Auto layout active
 Position
 Direction
@@ -132,15 +112,10 @@ Padding bottom
 Padding left
 Padding Right
 
-
-Interaction:
-
+**Interaction:**
 Interaction active
 Interaction trigger
 Interaction action
 Flow starting point
 
-
-Or narrow down your selection with manually from the results list. Clicking on the results will locate the elements on the canvas, so you can easily see what is being adjusted before executing the action.
-
-https://www.figma.com/community/plugin/1422956196270075203/timesaver-conditionally-select-rename-export-delete-duplicate
+**Or narrow down your selection with manually from the results list.** Clicking on the results will locate the elements on the canvas, so you can easily see what is being adjusted before executing the action.
