@@ -1,6 +1,5 @@
-## Figma Timesaver Plugin
-
-https://www.figma.com/community/plugin/1422956196270075203/timesaver-conditionally-select-rename-export-delete-duplicate
+## Timesaver: Conditionally Select, Rename, Export, Delete, Duplicate
+### Plugin for Figma: [figma.com/community/plugin/1422956196270075203/timesaver-conditionally-select-rename-export-delete-duplicate](https://www.figma.com/community/plugin/1422956196270075203/timesaver-conditionally-select-rename-export-delete-duplicate)
 
 <p float="left">
 <img src="https://github.com/fireinureeyes/figma-timesaver/blob/main/logo.png?raw=true">
