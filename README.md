@@ -10,11 +10,12 @@ Define your custom conditions and quickly filter out any subset of elements acro
 Then choose one of the actions to bulk process them.
 
 ### Example use cases
-- SELECT all groups not using auto layout
-- RENAME all frames on the bottom half of the screen (regex allowed)
-- EXPORT all icons of a specific layer name format
-- DELETE all masks or locked elements
-- DUPLICATE and collect all components on one page
+- SELECT all groups not using auto layout,
+- RENAME all frames on the bottom half of the screen (regex allowed),
+- EXPORT all icons of a specific layer name format,
+- DELETE all masks or locked elements,
+- DUPLICATE and collect all components on one page,
+- or EXPORT A LIST of elements as a CSV file for documentation purposes. 
 The possibilities are endless...
 
 
@@ -123,3 +124,10 @@ Use logical AND and OR to build up complex conditions from:
 - Flow starting point
 
 **Or narrow down your selection with manually from the results list.** Clicking on the results will locate the elements on the canvas, so you can easily see what is being adjusted before executing the action.
+
+**Renaming supports the following variables: **
+- {id} - unique number
+- {name} - original layer name
+- {page} - name of the page where the layer is located
+- {date} - current date in a YYYY-MM-DD format
+- {alphabet} - letter sequence a-z
