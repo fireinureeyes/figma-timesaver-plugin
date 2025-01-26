@@ -15,6 +15,10 @@ figma.ui.onmessage = async (msg) => {
     figma.ui.postMessage({ type: 'update-element-count', count: nodesToProcess.length, currentPageCount: nodesToProcess.length, elements: nodesToProcess.map(element => ({ id: element.id, name: element.name, pageName: getPageName(element), selected: true })) });
   }
 
+  if (msg.type === 'get-filename') {
+    figma.ui.postMessage({ type: 'filename', fileName: figma.root.name });
+  }
+
   if (msg.type === 'filter-elements') {
     const { objectScope, elementType, filters, action, newName, replaceText, exportScale, exportFormat, exportSuffix } = msg;
     let nodesToProcess: SceneNode[] = [];
@@ -133,6 +137,15 @@ figma.ui.onmessage = async (msg) => {
                 conditionMet = regex.test(layerName);
               } else {
                 conditionMet = compareStrings(layerName, value, comparison);
+              }
+              break;
+            case 'page-name':
+              const pageName = getPageName(node) || "";
+              if (comparison === 'fits-regex') {
+                const regex = new RegExp(value);
+                conditionMet = regex.test(pageName);
+              } else {
+                conditionMet = compareStrings(pageName, value, comparison);
               }
               break;
             case 'appearance-rounding':
@@ -628,6 +641,11 @@ figma.ui.onmessage = async (msg) => {
                 conditionMet = hasAction;
               }
               break;
+            case 'nested-level':
+              const nestedLevelValue = parseInt(value);
+              const nodeNestedLevel = getNodeNestedLevel(node);
+              conditionMet = compareValues(nodeNestedLevel, nestedLevelValue, comparison);
+              break;
             default:
               break;
           }
@@ -848,4 +866,14 @@ function getPageName(node: SceneNode): string {
     currentNode = currentNode.parent;
   }
   return currentNode ? currentNode.name : '';
+}
+
+function getNodeNestedLevel(node: SceneNode): number {
+  let level = 0;
+  let currentNode: BaseNode | null = node;
+  while (currentNode && currentNode.parent && currentNode.parent.type !== 'PAGE') {
+    level++;
+    currentNode = currentNode.parent;
+  }
+  return level;
 }

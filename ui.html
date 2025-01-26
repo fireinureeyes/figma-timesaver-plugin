@@ -1,10 +1,11 @@
 <div class="header">
   <div>
-  <b>Timesaver:</b>
-  Conditionally select, delete, duplicate, rename or export anything from the canvas. 
-</div>
+    <b>Timesaver:</b>
+    Conditionally select, rename, export, delete or duplicate anything from the canvas.
+  </div>
   <div class="header-buttons">
     <button id="reset" class="button">Reset filters</button>
+    <button id="csv" class="button">Export list as CSV</button>
   </div>
 </div>
 </br>
@@ -15,7 +16,7 @@
         Find all
         <select id="elementType">
           <option value="ANY">objects</option>
-            <!-- <option value="VARIABLE">variables</option>
+          <!-- <option value="VARIABLE">variables</option>
             <option value="STYLE">styles</option> -->
           <option value="UNION">unions</option>
           <option value="SUBTRACT">subtracts</option>
@@ -35,7 +36,7 @@
           <option value="VECTOR">vectors</option>
         </select>
       </p>
-    </br>
+      </br>
       <p>
         in the
         <select id="objectScope">
@@ -45,13 +46,13 @@
         </select>
       </p>
     </div>
-  </br>
+    </br>
 
     <div id="filterContainer"></div>
 
     <button id="addFilter">+ Add filter condition</button>
-  </br>
-</br></br></br>
+    </br>
+    </br></br></br>
     <p id="elementCount" style="margin-top: 10px; font-weight: bold;">0 element(s) found</p>
     <div class="actions">
       <label>
@@ -124,7 +125,8 @@
     overflow-y: hidden;
   }
 
-  .select-checkbox, #selectAllCheckbox {
+  .select-checkbox,
+  #selectAllCheckbox {
     cursor: pointer;
     width: 12px;
     height: 12px;
@@ -132,10 +134,11 @@
   }
 
   body {
-  font-size: 15px;
+    font-size: 15px;
   }
 
-  th:first-child, td:first-child {
+  th:first-child,
+  td:first-child {
     width: 12px;
   }
 
@@ -178,6 +181,7 @@
 
   .header-buttons {
     display: flex;
+    gap: 10px;
   }
 
   p {
@@ -185,17 +189,26 @@
   }
 
   th {
-  color: black;
-  cursor: default;
+    color: black;
+    cursor: default;
   }
 
-  select, input[type="text"], input[type="number"], button {
+  select,
+  input[type="text"],
+  input[type="number"],
+  button {
     padding: 5px;
     margin: 5px 0;
   }
 
-  select, input[type="text"], input[type="number"] {
+  select,
+  input[type="text"],
+  input[type="number"] {
     width: 120px;
+  }
+
+  #objectScope {
+    width: 150px; 
   }
 
   button {
@@ -242,7 +255,8 @@
     margin-right: 5px;
   }
 
-  .filterRow select, .filterRow input[type="text"] {
+  .filterRow select,
+  .filterRow input[type="text"] {
     margin-right: 10px;
   }
 
@@ -273,7 +287,7 @@
     flex: 2;
     overflow-y: auto;
     border: 1px solid #ccc;
-    padding: 5px 2px; 
+    padding: 5px 2px;
     border-radius: 4px;
   }
 
@@ -283,7 +297,8 @@
     cursor: pointer;
   }
 
-  .results th, .results td {
+  .results th,
+  .results td {
     padding: 8px;
     text-align: left;
     border-bottom: 1px solid #ddd;
@@ -305,7 +320,7 @@
     const newNameTemplate = document.getElementById('newName').value || '{name}';
     const replaceText = document.getElementById('replaceText').value;
     const elementType = document.getElementById('elementType').value;
- 
+
     const resultsTableHeader = document.getElementById('resultsTableHeader');
     if (elementType === 'VARIABLE') {
       resultsTableHeader.innerHTML = `
@@ -428,10 +443,10 @@
 
     //select all results by default
     document.querySelectorAll('.select-checkbox').forEach(checkbox => {
-        checkbox.checked = true;
-        selectedElements.add(checkbox.dataset.id);
-        updateSelectedCount();
-      });
+      checkbox.checked = true;
+      selectedElements.add(checkbox.dataset.id);
+      updateSelectedCount();
+    });
 
     updateSelectAllCheckboxState();
   };
@@ -571,7 +586,7 @@
           selectedElements.delete(checkbox.dataset.id);
         }
       }
-    );
+      );
     }
     updateSelectedCount();
   });
@@ -589,11 +604,21 @@
           selectedElements.delete(checkbox.dataset.id);
         }
       }
-    );
+      );
     }
     updateSelectedCount();
-    
+
   });
+
+  const exportToCSV = () => {
+    parent.postMessage({
+      pluginMessage: {
+        type: 'get-filename'
+      }
+    }, '*');
+  };
+
+  document.getElementById('csv').onclick = exportToCSV;
 
   window.onload = () => {
     const objectScope = document.getElementById('objectScope');
@@ -603,6 +628,7 @@
     const renameField = document.getElementById('newName');
     const replaceField = document.getElementById('replaceText');
     const resetButton = document.getElementById('reset');
+    const csvButton = document.getElementById('csv');
     const elementCount = document.getElementById('elementCount');
     const selectButton = document.querySelector('input[name="action"][value="select"]');
     const renameButton = document.querySelector('input[name="action"][value="rename"]');
@@ -614,7 +640,7 @@
     const actionRadios = document.querySelectorAll('input[name="action"]');
 
     const filterConditions = [
-      { group: 'General', options: ['layer-name', 'width', 'height', 'x', 'y', 'visibility', 'rotation', 'number-of-children', 'nested-level', 'number-of-points', 'is-locked', 'is-mask', 'export-setting', 'overriden-properties'] },
+      { group: 'General', options: ['layer-name', 'page-name', 'width', 'height', 'x', 'y', 'visibility', 'rotation', 'number-of-children', 'nested-level', 'number-of-points', 'is-locked', 'is-mask', 'export-setting', 'overriden-properties'] },
       { group: 'Appearance', options: ['appearance-rounding', 'fill', 'stroke', 'stroke-color', 'appearance-opacity', 'appearance-blendmode', 'fills-blendmode', 'fills-opacity', 'fills-visibility', 'strokes-opacity', 'strokes-blendmode', 'strokes-visibility', 'strokes-type', 'strokes-align'] },
       { group: 'Effects', options: ['effect-drop_shadow', 'effect-inner_shadow', 'effect-layer_blur', 'effect-background_blur', 'effect-drop_shadow-positionx', 'effect-drop_shadow-positiony', 'effect-drop_shadow-blur', 'effect-drop_shadow-spread', 'effect-drop_shadow-color', 'effect-drop_shadow-blendmode', 'effect-inner_shadow-positionx', 'effect-inner_shadow-positiony', 'effect-inner_shadow-blur', 'effect-inner_shadow-spread', 'effect-inner_shadow-color', 'effect-inner_shadow-blendmode'] },
       { group: 'Text', options: ['font-name', 'font-size', 'line-height', 'letter-spacing', 'font-weight', 'text-horizontal-align', 'text-vertical-align', 'text-decoration', 'paragraph-indent', 'paragraph-spacing'] },
@@ -665,7 +691,7 @@
         options = `
             <option value="is-applied">is applied</option>
             <option value="is-not-applied">is not applied</option>`;
-      } else if (condition === "layer-name") {
+      } else if (condition === "layer-name" || condition === "page-name") {
         options = `
             <option value="equals">equals</option>
             <option value="does-not-equal">does not equal</option>
@@ -678,7 +704,7 @@
             <option value="is-gradient">is gradient</option>
             <option value="is-image">is image</option>
             <option value="is-video">is video</option>`;
-      } else if (condition === "stroke-color" ) {
+      } else if (condition === "stroke-color") {
         options = `
             <option value="equals">equals</option>
             <option value="does-not-equal">does not equal</option>`;
@@ -712,7 +738,7 @@
 
     const updateValueFieldVisibility = (condition, valueField, comparisonDropdown) => {
       const conditionsWithInput = [
-        'layer-name', 'appearance-rounding', 'fill', 'stroke', 'stroke-color',
+        'layer-name', 'page-name', 'appearance-rounding', 'fill', 'stroke', 'stroke-color',
         'appearance-opacity', 'width', 'height', 'x', 'y', 'font-name', 'font-size', 'line-height',
         'letter-spacing', 'font-weight', 'rotation', 'number-of-children', 'nested-level', 'corner-radius-top-left',
         'corner-radius-top-right', 'corner-radius-bottom-left', 'corner-radius-bottom-right',
@@ -751,7 +777,7 @@
         'interaction-action'
       ];
       const conditionsWithoutInput = [
-        'is-gradient', 'is-image', 'is-video', 'is-visible', 'is-not-visible', 'strokes-visibility','fills-visibility', 'overriden-properties', 'is-locked', 'is-mask', 'interaction', 'flow-starting-point'
+        'is-gradient', 'is-image', 'is-video', 'is-visible', 'is-not-visible', 'strokes-visibility', 'fills-visibility', 'overriden-properties', 'is-locked', 'is-mask', 'interaction', 'flow-starting-point'
       ];
       valueField.style.display = conditionsWithInput.includes(condition) ? 'inline-block' : 'none';
       if (conditionsWithBlendmode.includes(condition)) {
@@ -807,7 +833,7 @@
         valueField.min = '-1000000';
         valueField.max = '1000000';
         valueField.addEventListener('input', restrictNumberInput);
-      } else if (condition === 'layer-name' || condition === 'stroke-color' || condition === 'fill' || condition === 'font-name' || 'line-height') {
+      } else if (condition === 'layer-name' || condition === 'page-name' || condition === 'stroke-color' || condition === 'fill' || condition === 'font-name' || 'line-height') {
         valueField.type = 'text';
         valueField.removeEventListener('input', restrictNumberInput);
       } else {
@@ -878,12 +904,12 @@
       conditionDropdown.addEventListener('change', () => {
         updateComparisonOptions(conditionDropdown.value, comparisonDropdown);
         updateValueFieldVisibility(conditionDropdown.value, valueField, comparisonDropdown);
-        updateElementCount(); 
+        updateElementCount();
       });
 
       comparisonDropdown.addEventListener('change', () => {
         updateValueFieldVisibility(conditionDropdown.value, valueField, comparisonDropdown);
-        updateElementCount(); 
+        updateElementCount();
       });
 
       filterRow.querySelector('.removeFilter').onclick = () => {
@@ -970,13 +996,13 @@
       exportOptions.style.display = 'none';
       parent.postMessage({ pluginMessage: { type: 'initialize-count' } }, '*');
     };
-    
+
 
     parent.postMessage({ pluginMessage: { type: 'initialize-count' } }, '*');
   };
 
   window.onmessage = (event) => {
-    const { type, filterConditions: conditions, count, elements: newElements, image, name, url, currentPageCount } = event.data.pluginMessage;
+    const { type, filterConditions: conditions, count, elements: newElements, image, name, url, currentPageCount, fileName } = event.data.pluginMessage;
     elements = newElements || [];
     const selectButton = document.querySelector('input[name="action"][value="select"]');
     if (type === 'filter-options') {
@@ -986,10 +1012,10 @@
       });
     } else if (type === 'update-element-count') {
       if (count === 1) {
-      elementCount.textContent = `${count} element found`;
-    } else {
-      elementCount.textContent = `${count} elements found`;
-    } 
+        elementCount.textContent = `${count} element found`;
+      } else {
+        elementCount.textContent = `${count} elements found`;
+      }
       if (objectScope.value === 'all-pages') {
         selectButton.nextSibling.textContent = ` Select (${currentPageCount} on this page)`;
       }
@@ -1000,6 +1026,33 @@
       link.download = name;
       link.click();
       URL.revokeObjectURL(url);
+    } else if (type === 'filename') {
+      const rows = [];
+      const headers = Array.from(document.querySelectorAll('#resultsTable thead th')).map(th => th.textContent.trim()).slice(1);
+      headers[headers.length - 1] = 'File'; // Replace the last header with filename
+      rows.push(headers.join(','));
+
+      const dataRows = Array.from(document.querySelectorAll('#resultsTable tbody tr'));
+      dataRows.forEach(row => {
+        const checkbox = row.querySelector('.select-checkbox');
+        if (checkbox && checkbox.checked) {
+          const cells = Array.from(row.querySelectorAll('td')).map(td => td.textContent.trim()).slice(1);
+          const elementId = checkbox.dataset.id;
+          cells[cells.length - 1] = fileName; // Replace the last cell with the file name
+          rows.push(cells.join(','));
+        }
+      });
+
+      const csvContent = rows.join('\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', 'results.csv');
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     }
   };
 
@@ -1014,7 +1067,7 @@
       elementCount.textContent = `${totalCount} element found (${selectedCount} chosen for processing)`;
     } else {
       elementCount.textContent = `${totalCount} elements found (${selectedCount} chosen for processing)`;
-    } 
+    }
     document.getElementById('execute').disabled = selectedCount === 0;
   };
 </script>
