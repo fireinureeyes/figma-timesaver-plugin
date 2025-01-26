@@ -4,7 +4,6 @@ https://www.figma.com/community/plugin/1422956196270075203/timesaver-conditional
 
 <p float="left">
 <img src="https://github.com/fireinureeyes/figma-timesaver/blob/main/logo.png?raw=true">
- <img src="https://github.com/fireinureeyes/figma-timesaver/blob/main/screenshot.png?raw=true">
 </p>
 
 ### Stop doing things one by one and save time instead
@@ -18,6 +17,10 @@ EXPORT all icons of a specific layer name format
 DELETE all masks or locked elements
 DUPLICATE and collect all components on one page
 The possibilities are endless...
+
+<p float="left">
+ <img src="https://github.com/fireinureeyes/figma-timesaver/blob/main/screenshot.png?raw=true">
+</p>
 
 ### Freely combine more than 80 properties to get what you need
 Use logical AND and OR to build up complex conditions from:
