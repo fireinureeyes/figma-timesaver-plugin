@@ -43,6 +43,7 @@ Use logical AND and OR to build up complex conditions from:
 
 **General:**
 - Layer name
+- Page name
 - Width
 - Height
 - X-Coordinate
