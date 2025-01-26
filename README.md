@@ -19,7 +19,7 @@ The possibilities are endless...
 
 
 <p float="left">
- <img src="https://github.com/fireinureeyes/figma-timesaver/blob/main/screenshot.png?raw=true">
+ <img src="https://github.com/fireinureeyes/figma-timesaver-plugin/blob/main/timesaver.png?raw=true">
 </p>
 
 ### Freely combine more than 80 properties to get what you need
