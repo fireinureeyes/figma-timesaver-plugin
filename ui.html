@@ -52,7 +52,11 @@
 
     <button id="addFilter">+ Add filter condition</button>
     </br>
-    </br></br></br>
+  </br>
+    <div id="loadingMessage" style="display: block; text-align: left; font-weight: bold; color: red;">
+      Loading, please wait...
+    </div>
+  </br>
     <p id="elementCount" style="margin-top: 10px; font-weight: bold;">0 element(s) found</p>
     <div class="actions">
       <label>
@@ -113,6 +117,7 @@
       </thead>
       <tbody id="resultsList"></tbody>
     </table>
+    
   </div>
 </div>
 
@@ -656,6 +661,8 @@
     }));
 
     const updateElementCount = () => {
+      loadingMessage.style.display = 'block';
+      //console.log('loading start');
       parent.postMessage({
         pluginMessage: {
           type: 'filter-elements',
@@ -997,15 +1004,21 @@
       parent.postMessage({ pluginMessage: { type: 'initialize-count' } }, '*');
     };
 
-
+    // Initialize the results list when the plugin opens
     parent.postMessage({ pluginMessage: { type: 'initialize-count' } }, '*');
   };
 
   window.onmessage = (event) => {
-    const { type, filterConditions: conditions, count, elements: newElements, image, name, url, currentPageCount, fileName } = event.data.pluginMessage;
+    const { type, filterConditions: conditions, count, elements: newElements, image, name, url, currentPageCount, fileName, isLoading } = event.data.pluginMessage;
     elements = newElements || [];
     const selectButton = document.querySelector('input[name="action"][value="select"]');
-    if (type === 'filter-options') {
+    if (type === 'loading') {
+      const loadingMessage = document.getElementById('loadingMessage');
+      loadingMessage.style.display = isLoading ? 'block' : 'none';
+    } else if (type === 'limit-exceeded') {
+      const limitExceededMessage = document.getElementById('limitExceededMessage');
+      limitExceededMessage.style.display = 'block';
+    } else if (type === 'filter-options') {
       filterConditions = conditions;
       document.querySelectorAll('.filterCondition').forEach(dropdown => {
         dropdown.innerHTML = conditions.map(cond => `<option value="${cond}">${cond}</option>`).join('');
@@ -1055,9 +1068,7 @@
       document.body.removeChild(link);
     }
   };
-
-  // Initialize the results list when the plugin opens
-  parent.postMessage({ pluginMessage: { type: 'initialize-count' } }, '*');
+  
   parent.postMessage({ pluginMessage: { type: 'resize-window', height: 370 } }, '*');
 
   const updateSelectedCount = () => {
