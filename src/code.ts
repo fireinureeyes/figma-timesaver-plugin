@@ -11,8 +11,10 @@ type Variable = {
 
 figma.ui.onmessage = async (msg) => {
   if (msg.type === 'initialize-count') {
+    figma.ui.postMessage({ type: 'loading', isLoading: true });
     const nodesToProcess = Array.from(figma.currentPage.findAll());
     figma.ui.postMessage({ type: 'update-element-count', count: nodesToProcess.length, currentPageCount: nodesToProcess.length, elements: nodesToProcess.map(element => ({ id: element.id, name: element.name, pageName: getPageName(element), selected: true })) });
+    figma.ui.postMessage({ type: 'loading', isLoading: false });
   }
 
   if (msg.type === 'get-filename') {
@@ -84,30 +86,31 @@ figma.ui.onmessage = async (msg) => {
     }
 
     if (objectScope === 'current-page') {
-      nodesToProcess = Array.from(figma.currentPage.findAll());
+      nodesToProcess = figma.currentPage.findAll();
       currentPageCount = nodesToProcess.length;
     } else if (objectScope === 'all-pages') {
       await figma.loadAllPagesAsync();
-      nodesToProcess = figma.root.children.reduce((acc: SceneNode[], page: { type: string; id: string; findAll: () => any; }) => {
-        if (page.type === 'PAGE') {
-          const pageNodes = page.findAll();
-          if (page.id === figma.currentPage.id) {
-            currentPageCount = pageNodes.length;
-          }
-          acc.push(...pageNodes);
+      nodesToProcess = figma.root.children.flatMap(page => {
+      if (page.type === 'PAGE') {
+        const pageNodes = page.findAll();
+        if (page.id === figma.currentPage.id) {
+        currentPageCount = pageNodes.length;
         }
-        return acc;
-      }, []);
+        return pageNodes;
+      }
+      return [];
+      });
     } else if (objectScope === 'current-selection') {
       if (figma.currentPage.selection.length === 0) {
         figma.notify('Error: No selection found!');
+        figma.ui.postMessage({ type: 'loading', isLoading: false });
         return;
       }
       nodesToProcess = Array.from(figma.currentPage.selection);
       currentPageCount = nodesToProcess.length;
     }
 
-    const elements = nodesToProcess.filter(node => {
+    const elements = nodesToProcess.filter((node, index) => {
       if (elementType !== 'ANY') {
         if (elementType === 'UNION' || elementType === 'SUBTRACT' || elementType === 'INTERSECT' || elementType === 'EXCLUDE') {
           if (node.type !== 'BOOLEAN_OPERATION' || node.booleanOperation !== elementType) return false;
@@ -650,6 +653,11 @@ figma.ui.onmessage = async (msg) => {
               break;
           }
 
+          //if (index === nodesToProcess.length - 1) {
+          //  figma.ui.postMessage({ type: 'loading', isLoading: false });
+          //index = 0;
+          //}
+
           if (index === 0) return conditionMet;
           return logic === 'AND' ? acc && conditionMet : acc || conditionMet;
         }, true);
@@ -657,6 +665,9 @@ figma.ui.onmessage = async (msg) => {
 
       return true;
     });
+
+    figma.ui.postMessage({ type: 'loading', isLoading: false });
+    //console.log('finished');
 
     figma.ui.postMessage({ type: 'update-element-count', count: elements.length, elements: elements.map(element => ({ id: element.id, name: element.name, pageName: getPageName(element), selected: true })), currentPageCount });
 
