@@ -4,6 +4,7 @@
     Conditionally select, rename, export, delete or duplicate anything from the canvas.
   </div>
   <div class="header-buttons">
+    <button id="refresh" class="button">Refresh</button>
     <button id="reset" class="button">Reset filters</button>
     <button id="csv" class="button">Export list as CSV</button>
   </div>
@@ -577,11 +578,11 @@
     });
   };
 
-  //here
   document.getElementById('newName').addEventListener('input', () => {
     if (document.querySelector('input[name="action"]:checked').value === 'rename') {
       const selectedElementsOld = new Set(selectedElements);
       updateResultsList(elements);
+      updateElementCount();
       const checkboxes = document.querySelectorAll('.select-checkbox');
       checkboxes.forEach(checkbox => {
         checkbox.checked = selectedElementsOld.has(checkbox.dataset.id);
@@ -600,6 +601,7 @@
     if (document.querySelector('input[name="action"]:checked').value === 'rename') {
       const selectedElementsOld = new Set(selectedElements);
       updateResultsList(elements);
+      updateElementCount();
       const checkboxes = document.querySelectorAll('.select-checkbox');
       checkboxes.forEach(checkbox => {
         checkbox.checked = selectedElementsOld.has(checkbox.dataset.id);
@@ -625,6 +627,26 @@
 
   document.getElementById('csv').onclick = exportToCSV;
 
+  const getFilters = () => Array.from(document.querySelectorAll('.filterRow')).map((row, index) => ({
+      logic: index === 0 ? null : row.querySelector('.filterLogic')?.value,
+      key: row.querySelector('.filterCondition').value,
+      value: row.querySelector('.filterValue').value,
+      comparison: row.querySelector('.filterComparison').value,
+    }));
+
+  const updateElementCount = () => {
+    loadingMessage.style.display = 'block';
+    parent.postMessage({
+      pluginMessage: {
+        type: 'filter-elements',
+        objectScope: objectScope.value,
+        elementType: elementType.value,
+        filters: getFilters(),
+        action: 'count',
+      },
+    }, '*');
+  };
+
   window.onload = () => {
     const objectScope = document.getElementById('objectScope');
     const elementType = document.getElementById('elementType');
@@ -643,6 +665,7 @@
     const exportFormat = document.getElementById('exportFormat');
     const exportSuffix = document.getElementById('exportSuffix');
     const actionRadios = document.querySelectorAll('input[name="action"]');
+    const refreshButton = document.getElementById('refresh');
 
     const filterConditions = [
       { group: 'General', options: ['layer-name', 'page-name', 'width', 'height', 'x', 'y', 'visibility', 'rotation', 'number-of-children', 'nested-level', 'number-of-points', 'is-locked', 'is-mask', 'export-setting', 'overriden-properties'] },
@@ -652,27 +675,6 @@
       { group: 'Auto Layout', options: ['autolayout', 'autolayout-position', 'autolayout-direction', 'autolayout-item-spacing', 'autolayout-padding-top', 'autolayout-padding-bottom', 'autolayout-padding-left', 'autolayout-padding-right'] },
       { group: 'Interactions', options: ['interaction', 'interaction-trigger', 'interaction-action', 'flow-starting-point'] }
     ];
-
-    const getFilters = () => Array.from(document.querySelectorAll('.filterRow')).map((row, index) => ({
-      logic: index === 0 ? null : row.querySelector('.filterLogic')?.value,
-      key: row.querySelector('.filterCondition').value,
-      value: row.querySelector('.filterValue').value,
-      comparison: row.querySelector('.filterComparison').value,
-    }));
-
-    const updateElementCount = () => {
-      loadingMessage.style.display = 'block';
-      //console.log('loading start');
-      parent.postMessage({
-        pluginMessage: {
-          type: 'filter-elements',
-          objectScope: objectScope.value,
-          elementType: elementType.value,
-          filters: getFilters(),
-          action: 'count',
-        },
-      }, '*');
-    };
 
     const handleAction = (action) => {
       parent.postMessage({
@@ -1004,6 +1006,8 @@
       parent.postMessage({ pluginMessage: { type: 'initialize-count' } }, '*');
     };
 
+    refreshButton.onclick = updateElementCount;
+
     // Initialize the results list when the plugin opens
     parent.postMessage({ pluginMessage: { type: 'initialize-count' } }, '*');
   };
@@ -1015,9 +1019,8 @@
     if (type === 'loading') {
       const loadingMessage = document.getElementById('loadingMessage');
       loadingMessage.style.display = isLoading ? 'block' : 'none';
-    } else if (type === 'limit-exceeded') {
-      const limitExceededMessage = document.getElementById('limitExceededMessage');
-      limitExceededMessage.style.display = 'block';
+    } else if (type === 'update-results') {
+      updateElementCount();
     } else if (type === 'filter-options') {
       filterConditions = conditions;
       document.querySelectorAll('.filterCondition').forEach(dropdown => {
@@ -1030,7 +1033,7 @@
         elementCount.textContent = `${count} elements found`;
       }
       if (objectScope.value === 'all-pages') {
-        selectButton.nextSibling.textContent = ` Select (${currentPageCount} on this page)`;
+        selectButton.nextSibling.textContent = ` Select (on this page)`;
       }
       updateResultsList(elements);
     } else if (type === 'download-file') {

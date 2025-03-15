@@ -1,3 +1,4 @@
+import { get } from 'http';
 import * as JSZip from 'jszip';
 
 figma.showUI(__html__, { width: 1100, height: 370 });
@@ -106,7 +107,7 @@ figma.ui.onmessage = async (msg) => {
         figma.ui.postMessage({ type: 'loading', isLoading: false });
         return;
       }
-      nodesToProcess = Array.from(figma.currentPage.selection);
+      nodesToProcess = figma.currentPage.selection.flatMap(node => getNodeAndAllChildren(node));
       currentPageCount = nodesToProcess.length;
     }
 
@@ -667,24 +668,32 @@ figma.ui.onmessage = async (msg) => {
     });
 
     figma.ui.postMessage({ type: 'loading', isLoading: false });
-    //console.log('finished');
 
     figma.ui.postMessage({ type: 'update-element-count', count: elements.length, elements: elements.map(element => ({ id: element.id, name: element.name, pageName: getPageName(element), selected: true })), currentPageCount });
 
     const selectedElements = msg.selectedElements || [];
 
+    const filteredElements = elements.filter(function(node) {
+      return selectedElements.includes(node.id);
+    });
+
     if (action === 'select') {
-      const elementsOnCurrentPage = elements.filter(node => selectedElements.includes(node.id) && node.parent?.type === 'PAGE' && node.parent.id === figma.currentPage.id);
-      figma.currentPage.selection = elementsOnCurrentPage;
+      if (objectScope === 'all-pages') {
+        const elementsOnCurrentPage: SceneNode[] = filteredElements.filter((node: SceneNode) => getPageId(node) === figma.currentPage.id);
+        figma.currentPage.selection = elementsOnCurrentPage;
+      } else {
+      figma.currentPage.selection = filteredElements;
+    }
     } else if (action === 'delete') {
       elements.forEach(node => {
-        if (selectedElements.includes(node.id)) {
+        if (filteredElements.includes(node)) {
           node.remove();
         }
       });
+      figma.ui.postMessage({ type: 'update-results'}); // Refresh results list
     } else if (action === 'rename') {
       elements.forEach((node, index) => {
-        if (selectedElements.includes(node.id)) {
+        if (filteredElements.includes(node)) {
           const alphabet = String.fromCharCode(97 + (index % 26)); // cycles from a-z
           const currentDate = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
           const newNameWithVariables = newName
@@ -701,8 +710,9 @@ figma.ui.onmessage = async (msg) => {
           }
         }
       });
+      figma.ui.postMessage({ type: 'update-results'}); // Refresh results list
     } else if (action === 'duplicate') {
-      const duplicates = elements.filter(node => selectedElements.includes(node.id)).map(node => {
+      const duplicates = elements.filter((node: SceneNode) => filteredElements.includes(node)).map(node => {
         const clone = node.clone();
         figma.currentPage.appendChild(clone);
         return clone;
@@ -710,7 +720,7 @@ figma.ui.onmessage = async (msg) => {
       figma.currentPage.selection = duplicates;
       figma.viewport.scrollAndZoomIntoView(duplicates);
     } else if (action === 'export') {
-      const elementsToExport = elements.filter(node => selectedElements.includes(node.id));
+      const elementsToExport = elements.filter(node => filteredElements.some(filteredNode => filteredNode.id === node.id));
       if (elementsToExport.length > 1) {
         const zip = new JSZip();
         for (const node of elementsToExport) {
@@ -879,6 +889,14 @@ function getPageName(node: SceneNode): string {
   return currentNode ? currentNode.name : '';
 }
 
+function getPageId(node: SceneNode): string {
+  let currentNode: BaseNode | null = node;
+  while (currentNode && currentNode.type !== 'PAGE') {
+    currentNode = currentNode.parent;
+  }
+  return currentNode ? currentNode.id : '';
+}
+
 function getNodeNestedLevel(node: SceneNode): number {
   let level = 0;
   let currentNode: BaseNode | null = node;
@@ -887,4 +905,15 @@ function getNodeNestedLevel(node: SceneNode): number {
     currentNode = currentNode.parent;
   }
   return level;
+}
+
+function getNodeAndAllChildren(node: SceneNode): SceneNode[] {
+  let nodes: SceneNode[] = [];
+  nodes.push(node);
+  if ('children' in node) {
+    node.children.forEach(child => {
+      nodes = nodes.concat(getNodeAndAllChildren(child));
+    });
+  }
+  return nodes;
 }
