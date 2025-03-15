@@ -42,7 +42,7 @@ Use logical AND and OR to build up complex conditions from:
 - Frames
 - Boolean operations (unions, substracts, intersects, excludes)
 
-**General:**
+**General object properties:**
 - Layer name
 - Page name
 - Width
@@ -123,7 +123,7 @@ Use logical AND and OR to build up complex conditions from:
 - Interaction action
 - Flow starting point
 
-**Or narrow down your selection with manually from the results list.** Clicking on the results will locate the elements on the canvas, so you can easily see what is being adjusted before executing the action.
+**Or narrow down your selection manually from the results list.** Clicking on the results will locate the elements on the canvas, so you can easily see what is being adjusted before executing the action.
 
 **Renaming supports the following variables:**
 - {id} - unique number
