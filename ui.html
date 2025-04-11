@@ -326,80 +326,76 @@
     const newNameTemplate = document.getElementById('newName').value || '{name}';
     const replaceText = document.getElementById('replaceText').value;
     const elementType = document.getElementById('elementType').value;
-
     const resultsTableHeader = document.getElementById('resultsTableHeader');
-    if (elementType === 'VARIABLE') {
-      resultsTableHeader.innerHTML = `
-        <th><input type="checkbox" id="selectAllCheckbox" checked></th>
+
+    const headers = {
+      VARIABLE: `
+        <th><input type="checkbox" id="selectAllCheckbox"></th>
         <th>ID</th>
         <th>Collection Name</th>
         <th>Mode Name</th>
         <th>Variable Name</th>
         <th>Variable Value</th>
-      `;
-    } else if (elementType === 'STYLE') {
-      resultsTableHeader.innerHTML = `
-        <th><input type="checkbox" id="selectAllCheckbox" checked></th>
+      `,
+      STYLE: `
+        <th><input type="checkbox" id="selectAllCheckbox"></th>
         <th>ID</th>
         <th>Style Name</th>
         <th>Style Type</th>
-      `;
-    } else {
-      resultsTableHeader.innerHTML = `
-        <th><input type="checkbox" id="selectAllCheckbox" checked></th>
+      `,
+      DEFAULT: `
+        <th><input type="checkbox" id="selectAllCheckbox"></th>
         <th>ID</th>
         <th>Layer Name</th>
         <th>Page</th>
         <th id="newNameHeader" style="display: ${isRename ? 'table-cell' : 'none'};">New Name</th>
-      `;
-    }
+      `
+    };
 
-    elements.forEach((element, index) => {
+    resultsTableHeader.innerHTML = headers[elementType] || headers.DEFAULT;
+
+    const createRow = (element, index) => {
       const row = document.createElement('tr');
-      const idCell = document.createElement('td');
-      idCell.textContent = index;
-
       const isChecked = selectedElements.has(element.id);
+      const alphabet = String.fromCharCode(97 + (index % 26)); // cycles from a-z
+      const currentDate = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+      let newNameWithVariables = newNameTemplate
+        .replace('{id}', (index + 1).toString())
+        .replace('{name}', element.name)
+        .replace('{page}', element.pageName)
+        .replace('{date}', currentDate)
+        .replace('{alphabet}', alphabet);
 
-      if (elementType === 'VARIABLE') {
-        row.innerHTML = `
+      if (replaceText) {
+        const regex = new RegExp(replaceText, 'g');
+        newNameWithVariables = element.name.replace(regex, newNameWithVariables);
+      }
+
+      const rowContent = {
+        VARIABLE: `
           <td><input type="checkbox" class="select-checkbox" ${isChecked ? 'checked' : ''} data-id="${element.id}"></td>
           <td>${index}</td>
           <td>${element.collectionName || 'N/A'}</td>
           <td>${element.modeName || 'N/A'}</td>
           <td>${element.variableName || 'N/A'}</td>
           <td>${element.variableValue || 'N/A'}</td>
-        `;
-      } else if (elementType === 'STYLE') {
-        row.innerHTML = `
+        `,
+        STYLE: `
           <td><input type="checkbox" class="select-checkbox" ${isChecked ? 'checked' : ''} data-id="${element.id}"></td>
           <td>${index}</td>
           <td>${element.name}</td>
           <td>${element.styleType}</td>
-        `;
-      } else {
-        const alphabet = String.fromCharCode(97 + (index % 26)); // cycles from a-z
-        const currentDate = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
-        let newNameWithVariables = newNameTemplate
-          .replace('{id}', (index + 1).toString())
-          .replace('{name}', element.name)
-          .replace('{page}', element.pageName)
-          .replace('{date}', currentDate)
-          .replace('{alphabet}', alphabet);
-
-        if (replaceText) {
-          const regex = new RegExp(replaceText, 'g');
-          newNameWithVariables = element.name.replace(regex, newNameWithVariables);
-        }
-
-        row.innerHTML = `
+        `,
+        DEFAULT: `
           <td><input type="checkbox" class="select-checkbox" ${isChecked ? 'checked' : ''} data-id="${element.id}"></td>
           <td>${index}</td>
           <td>${element.name}</td>
           <td>${element.pageName}</td>
           <td style="display: ${isRename ? '' : 'none'};">${newNameWithVariables}</td>
-        `;
-      }
+        `
+      };
+
+      row.innerHTML = rowContent[elementType] || rowContent.DEFAULT;
 
       row.onclick = (event) => {
         if (event.target.tagName !== 'INPUT') {
@@ -412,49 +408,38 @@
         }
       };
 
-      resultsList.appendChild(row);
-    });
+      return row;
+    };
 
-    // Disable the execute button if there are no results
-    document.getElementById('execute').disabled = elements.length === 0;
+    elements.forEach((element, index) => resultsList.appendChild(createRow(element, index)));
 
-    // Add event listener to the select all checkbox
     const selectAllCheckbox = document.getElementById('selectAllCheckbox');
     selectAllCheckbox.addEventListener('change', (event) => {
       const isChecked = event.target.checked;
       document.querySelectorAll('.select-checkbox').forEach(checkbox => {
         checkbox.checked = isChecked;
-        if (isChecked) {
-          selectedElements.add(checkbox.dataset.id);
-        } else {
-          selectedElements.delete(checkbox.dataset.id);
-        }
+        isChecked ? selectedElements.add(checkbox.dataset.id) : selectedElements.delete(checkbox.dataset.id);
       });
       updateSelectedCount();
     });
 
-    // Add event listener to each row checkbox
     document.querySelectorAll('.select-checkbox').forEach(checkbox => {
       checkbox.addEventListener('change', (event) => {
         const isChecked = event.target.checked;
-        if (isChecked) {
-          selectedElements.add(event.target.dataset.id);
-        } else {
-          selectedElements.delete(event.target.dataset.id);
-        }
+        isChecked ? selectedElements.add(event.target.dataset.id) : selectedElements.delete(event.target.dataset.id);
         updateSelectedCount();
         updateSelectAllCheckboxState();
       });
     });
 
-    //select all results by default
     document.querySelectorAll('.select-checkbox').forEach(checkbox => {
       checkbox.checked = true;
       selectedElements.add(checkbox.dataset.id);
-      updateSelectedCount();
     });
 
+    updateSelectedCount();
     updateSelectAllCheckboxState();
+    document.getElementById('execute').disabled = elements.length === 0;
   };
 
   const updateSelectAllCheckboxState = () => {
@@ -1013,12 +998,24 @@
   };
 
   window.onmessage = (event) => {
-    const { type, filterConditions: conditions, count, elements: newElements, image, name, url, currentPageCount, fileName, isLoading } = event.data.pluginMessage;
+    const { type, filterConditions: conditions, count, elements: newElements, image, name, url, currentPageCount, fileName, isLoading, nodesToProcess } = event.data.pluginMessage;
     elements = newElements || [];
     const selectButton = document.querySelector('input[name="action"][value="select"]');
     if (type === 'loading') {
       const loadingMessage = document.getElementById('loadingMessage');
       loadingMessage.style.display = isLoading ? 'block' : 'none';
+      if (isLoading) {
+        if (nodesToProcess) {
+          loadingMessage.textContent = 'Loading page ' + count + " of " + currentPageCount + " (" + nodesToProcess + " nodes loaded)";
+        } else {
+        if (count) {
+          loadingMessage.textContent = 'Loading node '+count + " of " + currentPageCount;
+        } else {
+          loadingMessage.textContent = 'Loading...';
+        }}
+      } else {
+        loadingMessage.textContent = '';
+      }
     } else if (type === 'update-results') {
       updateElementCount();
     } else if (type === 'filter-options') {
@@ -1026,7 +1023,7 @@
       document.querySelectorAll('.filterCondition').forEach(dropdown => {
         dropdown.innerHTML = conditions.map(cond => `<option value="${cond}">${cond}</option>`).join('');
       });
-    } else if (type === 'update-element-count') {
+    } else if (type === 'update-element-list') {
       if (count === 1) {
         elementCount.textContent = `${count} element found`;
       } else {
@@ -1035,6 +1032,7 @@
       if (objectScope.value === 'all-pages') {
         selectButton.nextSibling.textContent = ` Select (on this page)`;
       }
+    } else if (type === 'update-element-count') {
       updateResultsList(elements);
     } else if (type === 'download-file') {
       const link = document.createElement('a');
