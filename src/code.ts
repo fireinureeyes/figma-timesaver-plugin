@@ -1,5 +1,7 @@
+import { count } from 'console';
 import { get } from 'http';
 import * as JSZip from 'jszip';
+import { cursorTo } from 'readline';
 
 figma.showUI(__html__, { width: 1100, height: 370 });
 
@@ -12,10 +14,25 @@ type Variable = {
 
 figma.ui.onmessage = async (msg) => {
   if (msg.type === 'initialize-count') {
-    figma.ui.postMessage({ type: 'loading', isLoading: true });
+    figma.ui.postMessage({ type: 'loading', isLoading: true, count: 0, currentPageCount: 0 });
     const nodesToProcess = Array.from(figma.currentPage.findAll());
-    figma.ui.postMessage({ type: 'update-element-count', count: nodesToProcess.length, currentPageCount: nodesToProcess.length, elements: nodesToProcess.map(element => ({ id: element.id, name: element.name, pageName: getPageName(element), selected: true })) });
-    figma.ui.postMessage({ type: 'loading', isLoading: false });
+    const elements = [];
+    for (let i = 0; i < nodesToProcess.length; i++) { 
+      elements.push({
+        id: nodesToProcess[i].id,
+        name: nodesToProcess[i].name,
+        pageName: getPageName(nodesToProcess[i]),
+        selected: true
+      });
+      figma.ui.postMessage({ type: 'loading', isLoading: true, count: i, currentPageCount: nodesToProcess.length });
+
+      // Pause every 100 frames for 40ms 
+      if (i > 0 && i % 2000 === 0) {
+        await new Promise(resolve => setTimeout(resolve, 1));
+      }
+    }
+    figma.ui.postMessage({ type: 'update-element-count', count: elements.length, currentPageCount: elements.length, elements });
+    figma.ui.postMessage({ type: 'loading', isLoading: false, count: elements.length });
   }
 
   if (msg.type === 'get-filename') {
@@ -23,6 +40,10 @@ figma.ui.onmessage = async (msg) => {
   }
 
   if (msg.type === 'filter-elements') {
+    // Pause every 100 frames for 40ms 
+    await new Promise(resolve => setTimeout(resolve, 40));
+    figma.ui.postMessage({ type: 'loading', isLoading: true });
+    await new Promise(resolve => setTimeout(resolve, 40));
     const { objectScope, elementType, filters, action, newName, replaceText, exportScale, exportFormat, exportSuffix } = msg;
     let nodesToProcess: SceneNode[] = [];
     let currentPageCount = 0;
@@ -90,17 +111,32 @@ figma.ui.onmessage = async (msg) => {
       nodesToProcess = figma.currentPage.findAll();
       currentPageCount = nodesToProcess.length;
     } else if (objectScope === 'all-pages') {
+
+      await new Promise(resolve => setTimeout(resolve, 40));
+      figma.ui.postMessage({ type: 'loading', isLoading: true });
+      await new Promise(resolve => setTimeout(resolve, 40));
+
       await figma.loadAllPagesAsync();
-      nodesToProcess = figma.root.children.flatMap(page => {
-      if (page.type === 'PAGE') {
-        const pageNodes = page.findAll();
-        if (page.id === figma.currentPage.id) {
+      nodesToProcess = [];
+      let pageCount = 0;
+      for (let i = 0; i < figma.root.children.length; i++) {
+        const page = figma.root.children[i];
+        if (page.type === 'PAGE') {
+          pageCount = pageCount + 1;
+      }}
+      for (let i = 0; i < figma.root.children.length; i++) {
+        const page = figma.root.children[i];
+        if (page.type === 'PAGE') {
+          const pageNodes = page.findAll();
+          if (page.id === figma.currentPage.id) {
         currentPageCount = pageNodes.length;
+          }
+          nodesToProcess = nodesToProcess.concat(pageNodes);
         }
-        return pageNodes;
+        await new Promise(resolve => setTimeout(resolve, 40));
+        figma.ui.postMessage({ type: 'loading', isLoading: true, count: i+1, currentPageCount: pageCount, nodesToProcess: nodesToProcess.length });
+        await new Promise(resolve => setTimeout(resolve, 40));
       }
-      return [];
-      });
     } else if (objectScope === 'current-selection') {
       if (figma.currentPage.selection.length === 0) {
         figma.notify('Error: No selection found!');
