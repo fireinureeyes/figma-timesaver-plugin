@@ -1,7 +1,7 @@
 <div class="header">
   <div>
     <b>Timesaver:</b>
-    Conditionally select, rename, export, delete or duplicate anything from the canvas.
+    Conditionally select, rename, export, delete or duplicate anything from the canvas. 
   </div>
   <div class="header-buttons">
     <button id="refresh" class="button">Refresh</button>
@@ -56,6 +56,9 @@
   </br>
     <div id="loadingMessage" style="display: block; text-align: left; font-weight: bold; color: red;">
       Loading, please wait...
+    </div>
+    </br>
+    <div id="tipMessage" style="display: block; text-align: left; font-weight: regular; color: green;">
     </div>
   </br>
     <p id="elementCount" style="margin-top: 10px; font-weight: bold;">0 element(s) found</p>
@@ -621,6 +624,7 @@
 
   const updateElementCount = () => {
     loadingMessage.style.display = 'block';
+    tipMessage.style.display = 'block';
     parent.postMessage({
       pluginMessage: {
         type: 'filter-elements',
@@ -997,24 +1001,39 @@
     parent.postMessage({ pluginMessage: { type: 'initialize-count' } }, '*');
   };
 
+  const progressBar = (done, all) => {
+    const percent = Math.round((done / all) * 100);
+    return ` (${percent}%) `+createProgressBar(percent);
+  };
+
+  const createProgressBar = (percentage) => {
+    const filledLength = Math.round((percentage / 100) * 10);
+    const emptyLength = 10 - filledLength;
+    return '█'.repeat(filledLength) + '▒'.repeat(emptyLength);
+  };
+
   window.onmessage = (event) => {
     const { type, filterConditions: conditions, count, elements: newElements, image, name, url, currentPageCount, fileName, isLoading, nodesToProcess } = event.data.pluginMessage;
     elements = newElements || [];
     const selectButton = document.querySelector('input[name="action"][value="select"]');
-    if (type === 'loading') {
+    if (type === 'loading') { 
       const loadingMessage = document.getElementById('loadingMessage');
+      const tipMessage = document.getElementById('tipMessage');
       loadingMessage.style.display = isLoading ? 'block' : 'none';
       if (isLoading) {
         if (nodesToProcess) {
-          loadingMessage.textContent = 'Loading page ' + count + " of " + currentPageCount + " (" + nodesToProcess + " nodes loaded)";
+          loadingMessage.textContent = 'Loading page ' + count + " of " + currentPageCount + " (" + nodesToProcess + " nodes loaded)"+ " " + progressBar(count, currentPageCount);
         } else {
         if (count) {
-          loadingMessage.textContent = 'Loading node '+count + " of " + currentPageCount;
+          tipMessage.style.display = count ? 'block' : 'none';
+          loadingMessage.textContent = 'Loading node '+count + " of " + currentPageCount + " " + progressBar(count, currentPageCount);
+          tipMessage.textContent = `Tip: Too many elements on one page? Improve the performance by limiting the scope to your current selection.`;
         } else {
           loadingMessage.textContent = 'Loading...';
         }}
       } else {
         loadingMessage.textContent = '';
+        tipMessage.textContent = '';
       }
     } else if (type === 'update-results') {
       updateElementCount();
